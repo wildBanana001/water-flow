@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	<style type="text/css">
+		* {
+			margin : 0;
+			padding: 0;
+		}
+		div {
+			width: 200px;
+			opacity: 0.8;
+			position: absolute;
+			display: inline-block;
+		}
+		img {
+			width: 200px;
+		}
+	</style>
+
+	<script src="./myAjax.js"></script>
+	<script type="text/javascript">
+		// 页面加载初始化
+		window.onload = function() {
+			var page = 1;
+			Ajax('GET', 'getPics.php', true, 'cpage=' + page, callback);
+		}
+		//回调函数
+		function callback(data) {
+			//解析后台数据
+			var arr = JSON.parse(data);
+			createImg();
+
+			//生成图片
+			function createImg() {
+				arr.forEach(function(ele,index) {
+					var oDiv = document.createElement('div');
+					var rnd = Math.floor(Math.random()*200 + 150);
+
+					oDiv.style.height = rnd + 'px';
+					// oDiv.innerHTML = index;
+					var oImg = new Image();
+					oImg.style.height = rnd + 'px';
+					oImg.src = ele.image;
+					oDiv.appendChild(oImg);;
+					document.body.appendChild(oDiv);
+				});
+				sort();	
+			}
+
+			//排序
+			function sort() {
+				var oDivArr = document.getElementsByTagName('div');
+				var windowLen = document.documentElement.clientWidth;
+				var count = Math.floor(windowLen / 210);
+
+				if(count <= 0) {
+					return;
+				}
+				var oCenter = (windowLen - count*210) / 2;	//居中
+				var sortArr = [];
+				var len = oDivArr.length;
+				for(var i = 0; i < len; i++) {
+					var num = i % count;
+					if(sortArr.length == count) {
+						var min = findMin(sortArr);
+						oDivArr[i].style.left = oCenter + min*210 + 'px';
+						oDivArr[i].style.top = sortArr[min] + 10 + 'px';
+						sortArr[min] += oDivArr[i].offsetHeight + 10;
+					}else {
+						sortArr[num] = oDivArr[i].offsetHeight;
+						oDivArr[i].style.left = oCenter + 200*num + 10*num + 'px';
+						oDivArr[i].style.top = 0;
+					}
+				}
+			}
+
+			//找出一行中高度最小的
+			function findMin(Arr) {
+				var m = 0;
+				for(var i = 0; i < Arr.length; i++) {
+					m = Math.min(Arr[m], Arr[i]) == Arr[m] ? m : i;
+				}
+				return m;
+			}
+
+			//当浏览器窗口大小改变时重新布局排序
+			window.onresize = function() {
+				sort();
+			}
+			//浏览器窗口滚动触发
+			window.onscroll = function(e) {
+				var e = e || window.event;
+				var winHeight = document.documentElement.clientHeight;
+				var oSrcTop = document.documentElement.scrollTop|| document.body.scrollTop;
+				var oSrcHeight = document.documentElement.scrollHeight;
+				//滚动距离＋浏览器窗口高度大于
+				if(oSrcTop + winHeight >= oSrcHeight) {				
+					page++;
+					console.log(page);
+					Ajax('GET', 'getPics.php', true, 'cpage=' + page, callback);
+				}
+			}		
+		}
+
+	</script>
+	
+</body>
+</html>
